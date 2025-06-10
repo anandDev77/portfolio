@@ -9,6 +9,10 @@ on:
   release:
     types: [created]
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   GITHUB_SHA: ${{ github.sha }}
 #   ACR_NAME: kyncjot
