@@ -20,6 +20,7 @@ env:
   GITOPS_DIR: application
   IMAGE_NAME: portfolio
   APP_NAME: portfolio
+  IMAGE_TAG: ${{ github.sha }}
   GITOPS_USERNAME: ${{ secrets.GITOPS_USERNAME }}
 
 jobs:
