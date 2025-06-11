@@ -61,40 +61,39 @@ jobs:
         docker tag $ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} $ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:latest
         docker push $ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:latest
 
+  update-gitops-repo:
+    name: Publish image updates to gitops repo
+    runs-on: ubuntu-latest
+    needs: [setup-build-publish-deploy]
+    steps:
+      - name: Checkout gitops repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.GITOPS_REPO }}
+          path: gitops
+          token: ${{ secrets.GITOPS_TOKEN }}
 
-#   update-gitops-repo:
-#     name: Publish image updates to gitops repo
-#     runs-on: ubuntu-latest
-#     needs: [setup-build-publish-deploy]
-#     steps:
-#       - name: Checkout gitops repo
-#         uses: actions/checkout@v2
-#         with:
-#           repository: ${{ env.GITOPS_REPO }}
-#           path: gitops
-#           token: ${{ secrets.GITOPS_TOKEN }}
-
-#       - name: Update application
-#         run: |
-#           set -x
-#           set +e
-#           ls -la
-#           ls -la gitops
-#           cd gitops
-#           echo "print yq version"
-#           yq --version
-#           APP_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}"
-#           VERSION="${{ github.sha }}"
-#           APP_NAME="${{ env.APP_NAME }}"
-#           yq e ".spec.portfolio.image.repository = \"$APP_IMAGE\"" -i "${GITOPS_DIR}/stocktrader-aws-eks-cr.yml"
-#           yq e ".spec.portfolio.image.tag = \"$VERSION\"" -i "${GITOPS_DIR}/stocktrader-aws-eks-cr.yml"
-#           cat "${GITOPS_DIR}/stocktrader-aws-eks-cr.yml"
-#           if [[ $(git status -s | wc -l) -eq 0 ]]; then
-#             echo "No changes"
-#             exit 0
-#           fi
-#           git add "${GITOPS_DIR}/"
-#           git config --global user.name 'GH Actions'
-#           git config --global user.email 'github-actions@users.noreply.github.com'
-#           git commit -am "Updates ${APP_NAME} to ${VERSION}"
-#           git push https://$GITOPS_USERNAME:$GITOPS_TOKEN@github.com/$GITOPS_REPO 
+      - name: Update application
+        run: |
+          set -x
+          set +e
+          ls -la
+          ls -la gitops
+          cd gitops
+          echo "print yq version"
+          yq --version
+          APP_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}"
+          VERSION="${{ github.sha }}"
+          APP_NAME="${{ env.APP_NAME }}"
+          yq e ".spec.portfolio.image.repository = \"$APP_IMAGE\"" -i "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
+          yq e ".spec.portfolio.image.tag = \"$VERSION\"" -i "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
+          cat "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
+          if [[ $(git status -s | wc -l) -eq 0 ]]; then
+            echo "No changes"
+            exit 0
+          fi
+          git add "${GITOPS_DIR}/"
+          git config --global user.name 'GH Actions'
+          git config --global user.email 'github-actions@users.noreply.github.com'
+          git commit -am "Updates ${APP_NAME} to ${VERSION}"
+          git push https://$GITOPS_USERNAME:$GITOPS_TOKEN@github.com/$GITOPS_REPO 
