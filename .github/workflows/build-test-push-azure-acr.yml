@@ -135,10 +135,11 @@ jobs:
       uses: SonarSource/sonarcloud-github-action@v2
       with:
         projectBaseDir: .
+        args: >
+          -Dsonar.organization=ananddev77
+          -Dsonar.projectKey=anandDev77_account
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_PROJECT_KEY: anandDev77_account
-        SONAR_ORGANIZATION: ananddev77
 
   update-gitops-repo:
     name: Publish image updates to gitops repo
