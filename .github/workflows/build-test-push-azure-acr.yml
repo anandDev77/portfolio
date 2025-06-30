@@ -54,7 +54,7 @@ permissions:
 env:
   GITHUB_SHA: ${{ github.sha }}
   ACR_NAME: kyncjot
-  GITOPS_REPO: IBMStockTrader/stocktrader-gitops
+  GITOPS_REPO: anandDev77/stocktrader-gitops
   GITOPS_DIR: application
   IMAGE_NAME: portfolio
   APP_NAME: portfolio
