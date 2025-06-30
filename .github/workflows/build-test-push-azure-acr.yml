@@ -24,7 +24,6 @@
 #    - AZURE_SUBSCRIPTION_ID: Azure subscription ID
 #    - GITOPS_TOKEN: GitHub PAT with write access to your GitOps repo
 #    - GITOPS_USERNAME: Your GitHub username
-#    - ACR_LOGIN_SERVER: e.g., <acr-name>.azurecr.io
 #
 # 5. Set the following environment variables as needed:
 #    - GITOPS_REPO: <your-github-username>/<your-gitops-repo>
@@ -33,7 +32,7 @@
 #    - APP_NAME: portfolio
 #    - IMAGE_TAG: ${{ github.sha }}
 #
-# 6. This workflow expects the GitOps repo to contain a manifest file (e.g., stocktrader-azure-eks-cr.yml)
+# 6. This workflow expects the GitOps repo to contain a manifest file (e.g., stocktrader-azure-aks-cr.yml)
 #    with image.repository and image.tag fields for the service being updated.
 # =====================================================================================================
 
@@ -67,6 +66,8 @@ jobs:
     name: Setup, Build, Publish Deploy
     runs-on: ubuntu-latest
     environment: production
+    outputs:
+      acr_login_server: ${{ steps.build_and_output_acr.outputs.acr_login_server }}
 
     steps:
     # ---------------------------------------------------------------------------------
@@ -116,9 +117,11 @@ jobs:
     # - Uses build args for traceability.
     # - Pushes both tags to ACR.
     # ---------------------------------------------------------------------------------
-    - name: Build and Push Docker Image to ACR
+    - name: Build and Push Docker Image to ACR and Output Login Server
+      id: build_and_output_acr
       run: |
         ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query loginServer --output tsv)
+        echo "acr_login_server=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
         docker build -t $ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
           --build-arg GITHUB_SHA="$GITHUB_SHA" .
         docker push $ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
@@ -156,12 +159,13 @@ jobs:
           cd gitops
           echo "print yq version"
           yq --version
-          APP_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}"
+          ACR_LOGIN_SERVER="${{ needs.setup-build-publish-deploy.outputs.acr_login_server }}"
+          APP_IMAGE="$ACR_LOGIN_SERVER/${IMAGE_NAME}"
           VERSION="${{ github.sha }}"
           APP_NAME="${{ env.APP_NAME }}"
-          yq e ".spec.portfolio.image.repository = \"$APP_IMAGE\"" -i "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
-          yq e ".spec.portfolio.image.tag = \"$VERSION\"" -i "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
-          cat "${GITOPS_DIR}/stocktrader-azure-eks-cr.yml"
+          yq e ".spec.portfolio.image.repository = \"$APP_IMAGE\"" -i "${GITOPS_DIR}/stocktrader-azure-aks-cr.yml"
+          yq e ".spec.portfolio.image.tag = \"$VERSION\"" -i "${GITOPS_DIR}/stocktrader-azure-aks-cr.yml"
+          cat "${GITOPS_DIR}/stocktrader-azure-aks-cr.yml"
           if [[ $(git status -s | wc -l) -eq 0 ]]; then
             echo "No changes"
             exit 0
