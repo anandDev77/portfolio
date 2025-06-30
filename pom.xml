@@ -44,6 +44,8 @@
         <warContext>${app.name}</warContext>
         <package.file>${project.build.directory}/${app.name}.zip</package.file>
         <packaging.type>usr</packaging.type>
+        <sonar.projectKey>anandDev77_account</sonar.projectKey>
+        <sonar.organization>ananddev77</sonar.organization>
     </properties>
 
     <dependencies>
