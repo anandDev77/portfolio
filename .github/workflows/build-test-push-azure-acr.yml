@@ -137,8 +137,8 @@ jobs:
         projectBaseDir: .
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_PROJECT_KEY: <your-sonarcloud-project-key>
-        SONAR_ORGANIZATION: <your-sonarcloud-org-key>
+        SONAR_PROJECT_KEY: anandDev77_account
+        SONAR_ORGANIZATION: ananddev77
 
   update-gitops-repo:
     name: Publish image updates to gitops repo
