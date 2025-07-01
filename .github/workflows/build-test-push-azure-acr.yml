@@ -135,7 +135,6 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
         scanners: 'vuln,secret,misconfig,license'
-        output: trivy-report.txt
         timeout: '5m0s'
 
     - name: Upload Trivy scan report
