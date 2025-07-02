@@ -130,6 +130,7 @@ jobs:
       with:
         image-ref: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
         format: 'table'
+        output: trivy-report.txt
         exit-code: '0'
         ignore-unfixed: true
         vuln-type: 'os,library'
