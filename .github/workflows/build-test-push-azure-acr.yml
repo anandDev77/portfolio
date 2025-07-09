@@ -41,7 +41,7 @@ name: Build, Push to Azure ACR, Gitops
 on:
   push:
     branches:
-      - master
+      - feat-githubIssues
     paths-ignore:
       - '.github/**'
   release:
@@ -55,9 +55,9 @@ permissions:
 env:
   GITHUB_SHA: ${{ github.sha }}
   ACR_NAME: kyncjot
-  GITOPS_REPO: IBMStockTrader/stocktrader-gitops
+  GITOPS_REPO: anandDev77/stocktrader-gitops
   GITOPS_DIR: application
-  IMAGE_NAME: cjot/portfolio
+  IMAGE_NAME: portfolio
   APP_NAME: portfolio
   IMAGE_TAG: ${{ github.sha }}
   GITOPS_USERNAME: ${{ secrets.GITOPS_USERNAME }}
