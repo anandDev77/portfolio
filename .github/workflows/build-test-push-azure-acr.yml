@@ -130,15 +130,11 @@ jobs:
     # Step 7: Scan the built Docker image for vulnerabilities using Trivy and create GitHub issues for high severity findings.
     # This step checks for OS, library, secret, and misconfiguration issues in the image.
     # ---------------------------------------------------------------------------------
-    # - name: Security Scan with Trivy and Create Issues
-    #   uses: lazy-actions/gitrivy@v3
-    #   with:
-    #     token: ${{ secrets.GITHUB_TOKEN }}
-    #     image: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-    #     # issue_title: 'Security Vulnerability Found in ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
-    #     # issue_label: 'security,vulnerability,trivy'
-    #     # fail_on_vulnerabilities: false
-    #     # vuln_type: 'os,library'
+    - name: Security Scan with Trivy and Create Issues
+      uses: lazy-actions/gitrivy@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        image: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
     # ---------------------------------------------------------------------------------
     # Step 8: Additional Trivy scan for comprehensive reporting (existing functionality).
