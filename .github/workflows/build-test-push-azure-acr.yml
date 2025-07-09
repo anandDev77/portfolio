@@ -130,14 +130,31 @@ jobs:
     # Step 7: Scan the built Docker image for vulnerabilities using Trivy and create GitHub issues for high severity findings.
     # This step checks for OS, library, secret, and misconfiguration issues in the image.
     # ---------------------------------------------------------------------------------
-    - name: Security Scan with Trivy and Create Issues
-      uses: lazy-actions/gitrivy@v3
+    - name: Security Scan with Trivy (JSON output)
+      uses: aquasecurity/trivy-action@0.28.0
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        image: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        image-ref: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        format: 'json'
+        output: 'trivy-results.json'
+        exit-code: '0'
+        ignore-unfixed: true
+        severity: 'CRITICAL,HIGH'
+        scanners: 'vuln,secret,misconfig'
+        timeout: '5m0s'
 
     # ---------------------------------------------------------------------------------
-    # Step 8: Additional Trivy scan for comprehensive reporting (existing functionality).
+    # Step 8: Create GitHub issues from Trivy scan results
+    # ---------------------------------------------------------------------------------
+    - name: Create GitHub Issues from Trivy Results
+      uses: CemitDigital/trivy-report-issue-action@v1.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        input-filename: 'trivy-results.json'
+        label: 'security,vulnerability,trivy'
+        assignee: 'anandDev77'
+
+    # ---------------------------------------------------------------------------------
+    # Step 9: Additional Trivy scan for comprehensive reporting (existing functionality).
     # This maintains the current detailed scan report for artifacts and logs.
     # ---------------------------------------------------------------------------------
     - name: Comprehensive Security Scan with Trivy
@@ -154,7 +171,7 @@ jobs:
         timeout: '5m0s'
 
     # ---------------------------------------------------------------------------------
-    # Step 9: Upload the Trivy scan report as a workflow artifact for later review.
+    # Step 10: Upload the Trivy scan report as a workflow artifact for later review.
     # ---------------------------------------------------------------------------------
     - name: Upload Trivy scan report
       uses: actions/upload-artifact@v4
@@ -163,14 +180,14 @@ jobs:
         path: trivy-report.txt
 
     # ---------------------------------------------------------------------------------
-    # Step 10: Display the Trivy scan report in the workflow logs for quick visibility.
+    # Step 11: Display the Trivy scan report in the workflow logs for quick visibility.
     # ---------------------------------------------------------------------------------
     - name: Show Trivy scan report in log
       run: cat trivy-report.txt
       continue-on-error: true
 
     # ---------------------------------------------------------------------------------
-    # Step 11: Push the Docker image to ACR.
+    # Step 12: Push the Docker image to ACR.
     # ---------------------------------------------------------------------------------
     - name: Push Docker image to ACR
       run: |
