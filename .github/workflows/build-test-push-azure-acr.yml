@@ -131,97 +131,15 @@ jobs:
     # This step checks for OS, library, secret, and misconfiguration issues in the image.
     # ---------------------------------------------------------------------------------
     - name: Security Scan with Trivy and Create Issues
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: lazy-actions/gitrivy@v3
       with:
-        image-ref: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-        format: 'json'
-        output: trivy-vulnerabilities.json
-        exit-code: '0'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
-        scanners: 'vuln'
-        timeout: '5m0s'
-
-    # ---------------------------------------------------------------------------------
-    # Step 7.1: Create GitHub issues for high severity vulnerabilities
-    # ---------------------------------------------------------------------------------
-    - name: Create GitHub Issues for Vulnerabilities
-      if: always()
-      run: |
-        if [ -f trivy-vulnerabilities.json ]; then
-          # Parse JSON and create issues for CRITICAL and HIGH severity vulnerabilities
-          python3 -c "
-        import json
-        import os
-        import requests
-        
-        # Read the Trivy scan results
-        with open('trivy-vulnerabilities.json', 'r') as f:
-            data = json.load(f)
-        
-        # GitHub API setup
-        token = os.environ['GITHUB_TOKEN']
-        repo = os.environ['GITHUB_REPOSITORY']
-        headers = {
-            'Authorization': f'token {token}',
-            'Accept': 'application/vnd.github.v3+json'
-        }
-        
-        # Process vulnerabilities
-        issues_created = 0
-        for result in data.get('Results', []):
-            for vuln in result.get('Vulnerabilities', []):
-                severity = vuln.get('Severity', 'UNKNOWN')
-                if severity in ['CRITICAL', 'HIGH']:
-                    # Create issue title and body
-                    vuln_id = vuln.get('VulnerabilityID', 'Unknown')
-                    pkg_name = vuln.get('PkgName', 'Unknown')
-                    title = f'Security Vulnerability: {vuln_id} in {pkg_name}'
-                    
-                    body = f'''## Security Vulnerability Detected
-                    
-        **Vulnerability ID:** {vuln_id}
-        **Package:** {pkg_name}
-        **Severity:** {severity}
-        **Description:** {vuln.get('Description', 'No description available')}
-        **Fixed Version:** {vuln.get('FixedVersion', 'Not fixed')}
-        **Image:** {os.environ['ACR_NAME']}.azurecr.io/{os.environ['IMAGE_NAME']}:{os.environ['IMAGE_TAG']}
-        
-        ### Details:
-        - **CVSS Score:** {vuln.get('CVSS', {}).get('nvd', {}).get('V3Score', 'N/A')}
-        - **References:** {vuln.get('References', [])}
-        
-        ### Recommended Actions:
-        1. Update the affected package to the fixed version
-        2. Rebuild the Docker image
-        3. Deploy the updated image
-        '''
-                    
-                    # Create GitHub issue
-                    issue_data = {
-                        'title': title,
-                        'body': body,
-                        'labels': ['security', 'vulnerability', 'trivy', severity.lower()]
-                    }
-                    
-                    response = requests.post(
-                        f'https://api.github.com/repos/{repo}/issues',
-                        headers=headers,
-                        json=issue_data
-                    )
-                    
-                    if response.status_code == 201:
-                        print(f'Created issue for {vuln_id}')
-                        issues_created += 1
-                    else:
-                        print(f'Failed to create issue for {vuln_id}: {response.status_code}')
-        
-        print(f'Total issues created: {issues_created}')
-        "
-        else
-          echo "No vulnerability scan results found"
-        fi
+        token: ${{ secrets.GITHUB_TOKEN }}
+        image: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        # severity: 'CRITICAL,HIGH'
+        issue_title: 'Security Vulnerability Found in ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
+        issue_label: 'security,vulnerability,trivy'
+        fail_on_vulnerabilities: false
+        vuln_type: 'os,library'
 
     # ---------------------------------------------------------------------------------
     # Step 8: Additional Trivy scan for comprehensive reporting (existing functionality).
