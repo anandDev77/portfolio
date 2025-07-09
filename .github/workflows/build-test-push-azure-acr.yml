@@ -135,7 +135,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         image: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-        # severity: 'CRITICAL,HIGH'
         issue_title: 'Security Vulnerability Found in ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
         issue_label: 'security,vulnerability,trivy'
         fail_on_vulnerabilities: false
