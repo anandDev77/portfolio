@@ -154,6 +154,40 @@ jobs:
         assignee: 'anandDev77'
 
     # ---------------------------------------------------------------------------------
+    # Step 8.1: Find the latest created issue number (assumes only one issue is created per run)
+    # ---------------------------------------------------------------------------------
+    - name: Find latest created issue number
+      id: find_issue
+      run: |
+        ISSUE_NUMBER=$(gh issue list --limit 1 --state open --author ${{ github.actor }} --json number --jq '.[0].number')
+        echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # ---------------------------------------------------------------------------------
+    # Step 8.2: Run AI inference for summary and action plan
+    # ---------------------------------------------------------------------------------
+    - name: Run AI inference for summary and action plan
+      id: inference
+      uses: actions/ai-inference@v1
+      with:
+        prompt: |
+          Summarize the following GitHub issue in one paragraph, then provide a clear action plan for remediation:
+          Title: ${{ github.event.issue.title }}
+          Body: ${{ github.event.issue.body }}
+
+    # ---------------------------------------------------------------------------------
+    # Step 8.3: Comment with AI summary and action plan
+    # ---------------------------------------------------------------------------------
+    - name: Comment with AI summary and action plan
+      run: |
+        gh issue comment ${{ steps.find_issue.outputs.issue_number }} --body '${{ steps.inference.outputs.response }}'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    
+
+    # ---------------------------------------------------------------------------------
     # Step 9: Additional Trivy scan for comprehensive reporting (existing functionality).
     # This maintains the current detailed scan report for artifacts and logs.
     # ---------------------------------------------------------------------------------
