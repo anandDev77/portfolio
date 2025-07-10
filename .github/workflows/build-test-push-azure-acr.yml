@@ -154,7 +154,7 @@ jobs:
         assignee: 'anandDev77'
 
     - name: Clear Trivy cache before table scan
-      run: trivy image --clear-cache
+      run: trivy clean --scan-cache
 
     # ---------------------------------------------------------------------------------
     # Step 9: Additional Trivy scan for comprehensive reporting (existing functionality).
