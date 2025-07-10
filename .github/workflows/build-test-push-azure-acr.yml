@@ -153,6 +153,9 @@ jobs:
         label: 'bug'
         assignee: 'anandDev77'
 
+    - name: Clear Trivy cache before table scan
+      run: trivy image --clear-cache
+
     # ---------------------------------------------------------------------------------
     # Step 9: Additional Trivy scan for comprehensive reporting (existing functionality).
     # This maintains the current detailed scan report for artifacts and logs.
