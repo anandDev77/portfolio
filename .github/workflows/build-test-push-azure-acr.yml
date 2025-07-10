@@ -51,7 +51,6 @@ permissions:
   id-token: write
   contents: read
   issues: write
-  models: read
 
 env:
   GITHUB_SHA: ${{ github.sha }}
