@@ -175,9 +175,9 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # ---------------------------------------------------------------------------------
-    # Step 8.2: Call GitHub Models API for summary and action plan
+    # Step 8.2: Call GitHub Models API for summary and action plan (with debugging)
     # ---------------------------------------------------------------------------------
-    - name: Call AI model for summary and action plan
+    - name: Call AI model for summary and action plan (with debug)
       id: ai_summary
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -196,10 +196,18 @@ jobs:
                     }
                  ],
                  "model": "openai/gpt-3.5-turbo"
-              }' | jq -r '.choices[0].message.content')
-        echo "response<<EOF" >> $GITHUB_OUTPUT
-        echo "$RESPONSE" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+              }')
+        echo "RAW RESPONSE: $RESPONSE"
+        if echo "$RESPONSE" | jq . > /dev/null 2>&1; then
+          SUMMARY=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
+          echo "response<<EOF" >> $GITHUB_OUTPUT
+          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "Error: Response is not valid JSON"
+          echo "$RESPONSE"
+          exit 1
+        fi
 
     # ---------------------------------------------------------------------------------
     # Step 8.3: Comment with AI summary and action plan
