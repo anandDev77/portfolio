@@ -154,34 +154,58 @@ jobs:
         assignee: 'anandDev77'
 
     # ---------------------------------------------------------------------------------
-    # Step 8.1: Find the latest created issue number (assumes only one issue is created per run)
+    # Step 8.1: Find the latest created issue number and fetch its title/body
     # ---------------------------------------------------------------------------------
-    - name: Find latest created issue number
+    - name: Find latest created issue number and fetch details
       id: find_issue
       run: |
-        ISSUE_NUMBER=$(gh issue list --limit 1 --state open --author ${{ github.actor }} --json number --jq '.[0].number')
+        ISSUE_JSON=$(gh issue list --limit 1 --state open --author ${{ github.actor }} --json number,title,body --jq '.[0]')
+        ISSUE_NUMBER=$(echo "$ISSUE_JSON" | jq -r '.number')
+        ISSUE_TITLE=$(echo "$ISSUE_JSON" | jq -r '.title')
+        ISSUE_BODY=$(echo "$ISSUE_JSON" | jq -r '.body')
         echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+        echo "issue_title<<EOF" >> $GITHUB_OUTPUT
+        echo "$ISSUE_TITLE" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        echo "issue_body<<EOF" >> $GITHUB_OUTPUT
+        echo "$ISSUE_BODY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # ---------------------------------------------------------------------------------
-    # Step 8.2: Run AI inference for summary and action plan
+    # Step 8.2: Call GitHub Models API for summary and action plan
     # ---------------------------------------------------------------------------------
-    - name: Run AI inference for summary and action plan
-      id: inference
-      uses: actions/ai-inference@v1
-      with:
-        prompt: |
-          Summarize the following GitHub issue in one paragraph, then provide a clear action plan for remediation:
-          Title: ${{ github.event.issue.title }}
-          Body: ${{ github.event.issue.body }}
+    - name: Call AI model for summary and action plan
+      id: ai_summary
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_TITLE: ${{ steps.find_issue.outputs.issue_title }}
+        ISSUE_BODY: ${{ steps.find_issue.outputs.issue_body }}
+      run: |
+        PROMPT="Summarize the following GitHub issue in one paragraph, then provide a clear action plan for remediation:\nTitle: $ISSUE_TITLE\nBody: $ISSUE_BODY"
+        RESPONSE=$(curl -s "https://models.github.ai/inference/chat/completions" \
+           -H "Content-Type: application/json" \
+           -H "Authorization: Bearer $GITHUB_TOKEN" \
+           -d '{
+                "messages": [
+                    {
+                       "role": "user",
+                       "content": '"'$PROMPT'"'
+                    }
+                 ],
+                 "model": "openai/gpt-3.5-turbo"
+              }' | jq -r '.choices[0].message.content')
+        echo "response<<EOF" >> $GITHUB_OUTPUT
+        echo "$RESPONSE" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     # ---------------------------------------------------------------------------------
     # Step 8.3: Comment with AI summary and action plan
     # ---------------------------------------------------------------------------------
     - name: Comment with AI summary and action plan
       run: |
-        gh issue comment ${{ steps.find_issue.outputs.issue_number }} --body '${{ steps.inference.outputs.response }}'
+        gh issue comment ${{ steps.find_issue.outputs.issue_number }} --body '${{ steps.ai_summary.outputs.response }}'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
