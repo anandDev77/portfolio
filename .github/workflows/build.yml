@@ -79,8 +79,15 @@ jobs:
             $description
 
             [View in SonarQube]($sonarqube_url)
-            "
-              gh issue create --title "$title" --body "$body" --label "bug"
+            \n<!-- sonar-issue-key:$key -->\n"
+
+              # Check for existing open issue with this SonarQube key
+              existing=$(gh issue list --state open --search "$key" --json body --jq '.[] | select(.body | contains("sonar-issue-key:'"$key"'"))')
+              if [ -z "$existing" ]; then
+                gh issue create --title "$title" --body "$body" --label "bug"
+              else
+                echo "Issue with key $key already exists. Skipping."
+              fi
             done
           else
             echo "No high-severity issues found or invalid response from SonarQube."
