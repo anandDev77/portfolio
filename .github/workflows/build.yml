@@ -37,3 +37,19 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=portfolio -Dsonar.projectName='portfolio'
+      - name: Create GitHub issues for SonarQube high severity findings
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get high-severity issues from SonarQube
+          curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/issues/search?componentKeys=portfolio&severities=CRITICAL,BLOCKER&statuses=OPEN" > sonarqube_issues.json
+
+          # Create GitHub issues for each SonarQube issue
+          jq -c '.issues[]' sonarqube_issues.json | while read -r issue; do
+            title=$(echo "$issue" | jq -r '.message')
+            description=$(echo "$issue" | jq -r '.description')
+            key=$(echo "$issue" | jq -r '.key')
+            # Optionally, check for duplicates here
+            gh issue create --title "SonarQube: [CRITICAL] $title" --body "$description"
+          done
