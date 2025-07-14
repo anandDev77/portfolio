@@ -64,22 +64,16 @@ jobs:
               description=$(echo "$issue" | jq -r '.description // "No description provided."')
               key=$(echo "$issue" | jq -r '.key')
               sonarqube_url="http://74.235.186.15:9000/project/issues?id=portfolio&open=$key"
-              body="**SonarQube Finding**
-              - **Severity:** $severity
-              - **Rule:** [$rule](https://rules.sonarsource.com/java/RSPEC-$rule_id)
-              - **File:** \`$file\` (line $line)
-              - **Author:** $author
-              - **Effort to fix:** $effort
-              - **Tags:** $tags
-
-              **Message:**
-              $(echo "$issue" | jq -r '.message')
-
-              **Description:**
-              $description
-
-              [View in SonarQube]($sonarqube_url)
-              "
+              body="**SonarQube Finding**\n\n"
+              body+="- **Severity:** $severity\n"
+              body+="- **Rule:** [$rule](https://rules.sonarsource.com/java/RSPEC-$rule_id)\n"
+              body+="- **File:** \`$file\` (line $line)\n"
+              body+="- **Author:** $author\n"
+              body+="- **Effort to fix:** $effort\n"
+              body+="- **Tags:** $tags\n\n"
+              body+="**Message:**  $(echo "$issue" | jq -r '.message')\n\n"
+              body+="**Description:**  $description\n\n"
+              body+="[View in SonarQube]($sonarqube_url)\n"
               gh issue create --title "$title" --body "$body" --label "bug"
             done
           else
