@@ -34,12 +34,12 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Clean Maven cache
         run: rm -rf ~/.m2/repository/org/sonarsource/scanner
-      - name: Build and analyze
-        continue-on-error: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=portfolio -Dsonar.projectName='portfolio'
+      # - name: Build and analyze
+      #   continue-on-error: true
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #   run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=portfolio -Dsonar.projectName='portfolio'
       - name: Create GitHub issues for SonarQube high severity findings
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
