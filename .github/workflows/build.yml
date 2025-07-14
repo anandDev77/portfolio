@@ -34,19 +34,19 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Clean Maven cache
         run: rm -rf ~/.m2/repository/org/sonarsource/scanner
-      # - name: Build and analyze
-      #   continue-on-error: true
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      #   run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=portfolio -Dsonar.projectName='portfolio'
+      - name: Build and analyze
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=portfolio -Dsonar.projectName='portfolio'
       - name: Create GitHub issues for SonarQube high severity findings
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get high-severity issues from SonarQube
-          curl -s -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/issues/search?componentKeys=portfolio&severities=CRITICAL,BLOCKER&statuses=OPEN" > sonarqube_issues.json
+          curl -s -u "$SONAR_TOKEN:" "http://74.235.186.15:9000/api/issues/search?componentKeys=portfolio&severities=CRITICAL,BLOCKER&statuses=OPEN" > sonarqube_issues.json
           cat sonarqube_issues.json
 
           # Only proceed if the file is valid and has issues
