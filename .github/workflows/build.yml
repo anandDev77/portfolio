@@ -52,11 +52,20 @@ jobs:
           # Only proceed if the file is valid and has issues
           if jq -e '.issues | length > 0' sonarqube_issues.json > /dev/null; then
             jq -c '.issues[]' sonarqube_issues.json | while read -r issue; do
-              title=$(echo "$issue" | jq -r '.message')
-              description=$(echo "$issue" | jq -r '.description')
+              severity=$(echo "$issue" | jq -r '.severity')
+              title="SonarQube: [${severity}] $(echo "$issue" | jq -r '.message')"
+              file=$(echo "$issue" | jq -r '.component' | sed 's/^portfolio://')
+              line=$(echo "$issue" | jq -r '.line // "N/A"')
+              rule=$(echo "$issue" | jq -r '.rule')
+              rule_id=$(echo "$rule" | cut -d: -f2)
+              author=$(echo "$issue" | jq -r '.author // "N/A"')
+              effort=$(echo "$issue" | jq -r '.effort // "N/A"')
+              tags=$(echo "$issue" | jq -r '.tags | join(", ") // "None"')
+              description=$(echo "$issue" | jq -r '.description // "No description provided."')
               key=$(echo "$issue" | jq -r '.key')
-              # Optionally, check for duplicates here
-              gh issue create --title "SonarQube: [CRITICAL] $title" --body "$description"
+              sonarqube_url="http://74.235.186.15:9000/project/issues?id=portfolio&open=$key"
+              body="**SonarQube Finding**\n\n- **Severity:** $severity\n- **Rule:** [$rule](https://rules.sonarsource.com/java/RSPEC-$rule_id)\n- **File:** \`$file\` (line $line)\n- **Author:** $author\n- **Effort to fix:** $effort\n- **Tags:** $tags\n\n**Message:**  \n$(echo "$issue" | jq -r '.message')\n\n**Description:**  \n$description\n\n[View in SonarQube]($sonarqube_url)\n"
+              gh issue create --title "$title" --body "$body"
             done
           else
             echo "No high-severity issues found or invalid response from SonarQube."
