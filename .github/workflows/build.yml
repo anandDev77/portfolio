@@ -64,8 +64,17 @@ jobs:
               description=$(echo "$issue" | jq -r '.description // "No description provided."')
               key=$(echo "$issue" | jq -r '.key')
               sonarqube_url="http://74.235.186.15:9000/project/issues?id=portfolio&open=$key"
-              body="**SonarQube Finding**\n\n- **Severity:** $severity\n- **Rule:** [$rule](https://rules.sonarsource.com/java/RSPEC-$rule_id)\n- **File:** \`$file\` (line $line)\n- **Author:** $author\n- **Effort to fix:** $effort\n- **Tags:** $tags\n\n**Message:**  \n$(echo "$issue" | jq -r '.message')\n\n**Description:**  \n$description\n\n[View in SonarQube]($sonarqube_url)\n"
-              gh issue create --title "$title" --body "$body"
+              body="**SonarQube Finding**"\
+              "- **Severity:** $severity"\
+              "- **Rule:** [$rule](https://rules.sonarsource.com/java/RSPEC-$rule_id)"\
+              "- **File:** \\`$file\\` (line $line)"\
+              "- **Author:** $author"\
+              "- **Effort to fix:** $effort"\
+              "- **Tags:** $tags"\
+              "**Message:**$(echo "$issue" | jq -r '.message')"\
+              "**Description:**$description"\
+              "[View in SonarQube]($sonarqube_url)"
+              gh issue create --title "$title" --body "$body" --label "bug"
             done
           else
             echo "No high-severity issues found or invalid response from SonarQube."
