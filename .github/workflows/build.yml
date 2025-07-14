@@ -72,14 +72,14 @@ jobs:
               - **Effort to fix:** $effort
               - **Tags:** $tags
 
-              **Message:**
-              $(echo "$issue" | jq -r '.message')
+            **Message:**
+            $(echo "$issue" | jq -r '.message')
 
-              **Description:**
-              $description
+            **Description:**
+            $description
 
-              [View in SonarQube]($sonarqube_url)
-              "
+            [View in SonarQube]($sonarqube_url)
+            "
               gh issue create --title "$title" --body "$body" --label "bug"
             done
           else
